@@ -5,10 +5,9 @@ import os
 import json
 
 chromedriver = "C:/chromedriver/chromedriver.exe"
-driver = webdriver.Chrome(executable_path=r'C:/chromedriver/chromedriver.exe') # to open the chromebrowser 
+driver = webdriver.Chrome(executable_path=r'C:/chromedriver/chromedriver.exe')
 actionChains = ActionChains(driver)
 
-# driver.get("https://web.whatsapp.com")
 driver.get('https://www.juegosinfantilespum.com/laberintos-online/12-auto-buhos.php')
 
 time.sleep(5)
