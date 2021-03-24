@@ -31,7 +31,7 @@ La salidade datos esta en data/out.txt
 - [X] Posición del jugador
 - [X] Posición de los búhos
 - [X] Posición de la meta
-- [ ] Compresion de matriz final
+- [ ] Convertir imagen en grafo
 
 ## Compresion de matriz
 Se busca comprimir la matriz final de manera en la que sean menos los 1, dejando mas claro al agente en el futuro los posibles caminos disponibles.
