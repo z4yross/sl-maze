@@ -31,18 +31,19 @@ La salidade datos esta en data/out.txt
 - [X] Posición del jugador
 - [X] Posición de los búhos
 - [X] Posición de la meta
-- [ ] Convertir imagen en grafo
+- [ ] ~~Convertir imagen en grafo~~
+- [X] Solucionar laberinto con imagen
+- [X] Manipular agente
 
-## Compresion de matriz
-Se busca comprimir la matriz final de manera en la que sean menos los 1, dejando mas claro al agente en el futuro los posibles caminos disponibles.
 
 ## Estructura del proyecto
 <pre>
 maze/
 ├─ maze.jpg ........ Imagen generada por sketch processing
 ├─ readme.md ....... 
-├─ sl_maze.ipynb ... Notebook de pruebas
 ├─ sl_maze.py ...... Programa de reconocimiento
+├─ Car.py .......... Modelo del carro
+├─ Agent.py ........ Agente para solucionar el laberinto
 ├─ data/ ........... 
 │  ├─ data.json .... Estructura con coordenadas de los objetos en pantalla 
 │  └─ out.txt ...... Matriz final sin compresion
