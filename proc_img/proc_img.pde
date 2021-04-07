@@ -48,7 +48,7 @@ void setup(){
     noStroke();
     // float crdX = map(obst.getJSONArray(i).getFloat(0), 0, 730 - 1, 0, width - 1);
     // float crdY = map(obst.getJSONArray(i).getFloat(1), 0, 367, 0, height);
-    square(crdX, crdY, 45);
+    square(crdX, crdY, 40);
   }
   
   save("../maze.png");

@@ -11,28 +11,68 @@ from PIL import Image
 import numpy as np
 
 import math
+
 from Agent import Agent
+from Car import Car
+
 from math import pi, sin, cos
 
 import matplotlib.pyplot as plt
 
-def esperar(canvas):
-	res = input('Escriba 1 para resolver o 0 para salir: ')
+
+
+
+options = webdriver.ChromeOptions()
+options.add_argument("--log-level=OFF")
+options.add_argument("--log-level=3")
+options.add_argument("--log-level=0")
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+
+chromedriver = "C:/chromedriver/chromedriver.exe"
+# driver = webdriver.Chrome(executable_path=r'C:/chromedriver/chromedriver.exe')
+driver = webdriver.Chrome(options=options)
+# actionChains = ActionChains(driver)
+
+driver.get('https://www.juegosinfantilespum.com/laberintos-online/12-auto-buhos.php')
+
+# play_coords = (float(driver.execute_script("return exportRoot.children[3].x")), float(driver.execute_script("return exportRoot.children[3].y")))
+
+canvas = driver.find_element_by_id("animation_container")
+
+# time.sleep(1)
+
+
+
+
+def esperar(canvas, debug = False):
+	res = input(f'(debug = {debug} (d)) Escriba 1 para resolver o 0 para salir: ')
 	if res == '1':
-		sensar(True, canvas)
+		sensar(True, canvas, debug)
 	elif res == '0':
 		exit
+	elif res == 'd':
+		debug = not debug
+		esperar(canvas, debug)
 	else:
 		esperar(canvas)
 
-def sensar(gdr, canvas):
-	entorno = procesar(leer())
+def sensar(gdr, canvas, debug):
+	print('Leyendo nivel:')
+	entorno = None
+	try:
+		entorno = procesar(leer())
+	except:
+		print('No esta en nivel')
+		esperar(canvas)
 
 	if gdr:
-		guardar(entorno[0])
+		guardar(entorno[0])	
 
-	actuar(entorno[0], entorno[1], entorno[2], canvas, 0)
+	print('Solucionando nivel')
+	actuar(entorno[0], entorno[1], entorno[2], entorno[3], canvas, 0, show = debug)
 	# actionChains.key_down(Keys.ARROW_DOWN, element = canvas).key_up(Keys.ARROW_DOWN, element = canvas).pause(0.1).perform()
+		
 	esperar(canvas)
 
 
@@ -127,20 +167,25 @@ def procesar(objts):
 		for y in range(fnY - 9, fnY + 9):
 			objetos[y][x] = 3
 
-	return [objetos, coords_plyr, 3]
+	return [objetos, coords_plyr, 3, [fnX, fnY]]
 
 def guardar(objetos):
 	np.savetxt("data/out.txt", objetos, fmt="%d", delimiter='')
 
 
 
-def actuar(maze, inicio, objetivo, canvas, dr):
+def actuar(maze, inicio, objetivo, obj_cords, canvas, dr, show = False):
+	mz_cpy = maze.copy()
 
-	fig,ax = plt.subplots(1,1)
-	im = ax.imshow(maze)
-	fig.show()
+	im, fig = None, None
+	
 
-	agentes = [Agent(int(inicio[0]), int(inicio[1]), -pi/2, None, objetivo)]
+	if show:
+		fig,ax = plt.subplots(1,1)
+		im = ax.imshow(mz_cpy)
+		fig.show()
+
+	agentes = [Agent(int(inicio[0]), int(inicio[1]), dr, None, objetivo, im, fig, show, cln = 0)]
 	res = None
 	fn = True
 
@@ -148,7 +193,7 @@ def actuar(maze, inicio, objetivo, canvas, dr):
 	while fn:
 		tmp = []
 		for agente in agentes:
-			x = agente.update(maze)
+			x = agente.update(mz_cpy)
 
 			# print(f'c: ({agente.x}, {agente.y})\nlvl: {i}\nagentes={x}')
 			
@@ -158,15 +203,9 @@ def actuar(maze, inicio, objetivo, canvas, dr):
 				# print(f'c: ({agente.x}, {agente.y})\nlvl: {i}\nagentes={x}')
 				break
 			else:
-				tmp.extend(x)
-
-
-
+				tmp.extend(x)	
 		
-		im.set_data(maze)
-		fig.canvas.draw()
-		plt.pause(1)
-
+		# time.sleep(5)
 		i += 1
 		agentes = tmp
 		if not len(agentes):
@@ -174,73 +213,35 @@ def actuar(maze, inicio, objetivo, canvas, dr):
 
 
 	if res is None:
-		actuar(maze, inicio, objetivo, canvas, dr + pi/2)
-		# exit()
-
+		print('Reintentando')
+		if show:
+			plt.close()
+		actuar(maze, inicio, objetivo, obj_cords, canvas, dr + pi/2, show = show)
+		
 	else:
-		print('solving')
-		solve(traceback(res), canvas)
+		print('Nivel solucionado')
+		car = Car(int(inicio[0]), int(inicio[1]), traceback(res, obj_cords), driver)
+		car.update()
+		print('terminado')
+		esperar(canvas)
 
-def traceback(last):
-	sz = 950
-	actns_mp = {
-		0   : Keys.ARROW_RIGHT,
-		90  : Keys.ARROW_UP,
-		180 : Keys.ARROW_LEFT,
-		270 : Keys.ARROW_DOWN
-	}
-
-	actns_mp = {
-		0   : 'd' * sz,
-		90  : 'w' * sz,
-		180 : 'a' * sz,
-		270 : 's' * sz
-	}
-
+def traceback(last, obj_cords):
 	actions = []
 	current = last
+	prv_origin = current.origin
+
+	dr = int(math.degrees(current.dir) % 360)
+	actions.append((dr, obj_cords))
+
 	while current.parent is not None:
-		dr = int(math.degrees(current.dir) % 360)
-
-		actions.append(actns_mp[dr])
 		current = current.parent
+
+		dr = int(math.degrees(current.dir) % 360)
+		actions.append((dr, prv_origin))
+
+		prv_origin = current.origin
+
 	return actions
-
-def solve(actions, canvas):
-	actionChains.move_to_element(canvas).click(canvas)
-	while len(actions) > 0:
-		action = actions.pop()
-		# print(action)
-		# actionChains.key_down(action, element = canvas).key_up(action, element = canvas).pause(0.1)
-
-		actionChains.send_keys_to_element(canvas, action).pause(0.1)
-	actionChains.perform()
-	# print('performing')
-
-
-
-
-
-
-options = webdriver.ChromeOptions()
-options.add_argument("--log-level=OFF")
-options.add_argument("--log-level=3")
-options.add_argument("--log-level=0")
-options.add_experimental_option('excludeSwitches', ['enable-logging'])
-
-
-chromedriver = "C:/chromedriver/chromedriver.exe"
-# driver = webdriver.Chrome(executable_path=r'C:/chromedriver/chromedriver.exe')
-driver = webdriver.Chrome(options=options)
-actionChains = ActionChains(driver)
-
-driver.get('https://www.juegosinfantilespum.com/laberintos-online/12-auto-buhos.php')
-
-# play_coords = (float(driver.execute_script("return exportRoot.children[3].x")), float(driver.execute_script("return exportRoot.children[3].y")))
-
-canvas = driver.find_element_by_id("animation_container")
-
-# time.sleep(1)
 
 
 
