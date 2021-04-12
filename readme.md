@@ -6,6 +6,7 @@
 - [selenium](https://pypi.org/project/selenium/)
 - [pillow](https://pypi.org/project/Pillow/)
 - [numpy](https://pypi.org/project/numpy/)
+- [matplotlib](https://pypi.org/project/matplotlib/)
 
 ## Drivers
 - [chromedriver](https://chromedriver.chromium.org)
